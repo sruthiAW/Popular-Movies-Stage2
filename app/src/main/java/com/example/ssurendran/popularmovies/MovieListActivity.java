@@ -100,7 +100,12 @@ public class MovieListActivity extends AppCompatActivity implements Connectivity
             protected List<MovieDetails> doInBackground(Void... voids) {
                 String sortOrder = moviePref.getSortOrder();
                 if (!requestsBuilder.isNetworkAvailable() && !sortOrder.equalsIgnoreCase(getString(R.string.favorites_sort))){
-                    noContentTv.setText(R.string.no_internet_msg);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            noContentTv.setText(R.string.no_internet_msg);
+                        }
+                    });
                     return null;
                 }
 
@@ -157,7 +162,12 @@ public class MovieListActivity extends AppCompatActivity implements Connectivity
             protected List<MovieDetails> doInBackground(Void... voids) {
                 String sortOrder = moviePref.getSortOrder();
                 if (!requestsBuilder.isNetworkAvailable() && !sortOrder.equalsIgnoreCase(getString(R.string.favorites_sort))){
-                    noContentTv.setText(R.string.no_internet_msg);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            noContentTv.setText(R.string.no_internet_msg);
+                        }
+                    });
                     return null;
                 }
 

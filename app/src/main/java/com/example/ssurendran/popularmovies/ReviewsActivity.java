@@ -25,11 +25,13 @@ import static com.example.ssurendran.popularmovies.utils.Constants.MOVIE_ID_EXTR
 
 public class ReviewsActivity extends AppCompatActivity implements ConnectivityReceiver.ConnectivityCallback {
 
+    private static final String FIRST_VISIBLE_LIST_POSITION = "first_visible_position";
     private RecyclerView reviewRecyclerView;
     private TextView noContentTv;
     private RequestsBuilder requestsBuilder;
     private ConnectivityReceiver connectivityReceiver;
     private List<ReviewDetails> mReviews;
+    private int firstVisiblePosition = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,15 +48,28 @@ public class ReviewsActivity extends AppCompatActivity implements ConnectivityRe
         reviewRecyclerView = (RecyclerView) findViewById(R.id.rv_reviews_list);
         noContentTv = (TextView) findViewById(R.id.tv_no_content);
 
+        if (savedInstanceState != null){
+            firstVisiblePosition = savedInstanceState.getInt(FIRST_VISIBLE_LIST_POSITION);
+        }
+
+        setUpRecyclerView();
         fetchReviews();
     }
 
-    private void setUpRecyclerView(List<ReviewDetails> reviews){
-        mReviews = reviews;
+    private void setUpRecyclerView(){
         reviewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         reviewRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         reviewRecyclerView.setHasFixedSize(true);
+        reviewRecyclerView.setAdapter(null);
+    }
+
+    private void updateRecyclerView(List<ReviewDetails> reviews){
+        mReviews = reviews;
         reviewRecyclerView.setAdapter(new ReviewListAdapter(this, reviews));
+
+        if (firstVisiblePosition != -1){
+            ((LinearLayoutManager)reviewRecyclerView.getLayoutManager()).scrollToPosition(firstVisiblePosition);
+        }
     }
 
     @Override
@@ -79,6 +94,13 @@ public class ReviewsActivity extends AppCompatActivity implements ConnectivityRe
         return true;
     }
 
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        firstVisiblePosition = ((LinearLayoutManager)reviewRecyclerView.getLayoutManager()).findFirstVisibleItemPosition();
+        outState.putInt(FIRST_VISIBLE_LIST_POSITION, firstVisiblePosition);
+        super.onSaveInstanceState(outState);
+    }
+
     private void fetchReviews(){
         new AsyncTask<Void, Void, List<ReviewDetails>>() {
 
@@ -94,7 +116,12 @@ public class ReviewsActivity extends AppCompatActivity implements ConnectivityRe
             @Override
             protected List<ReviewDetails> doInBackground(Void... voids) {
                 if (!requestsBuilder.isNetworkAvailable()){
-                    noContentTv.setText(R.string.no_internet_msg);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            noContentTv.setText(R.string.no_internet_msg);
+                        }
+                    });
                     return null;
                 }
 
@@ -123,7 +150,7 @@ public class ReviewsActivity extends AppCompatActivity implements ConnectivityRe
                 }
                 reviewRecyclerView.setVisibility(View.VISIBLE);
                 noContentTv.setVisibility(View.GONE);
-                setUpRecyclerView(reviews);
+                updateRecyclerView(reviews);
             }
         }.execute(null, null, null);
     }

@@ -8,6 +8,7 @@ import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -62,6 +63,7 @@ public class DetailsActivity extends AppCompatActivity implements ConnectivityRe
     private TextView noTrailerTv;
     private RecyclerView trailerRecyclerView;
     private RelativeLayout mainLayout;
+    private NestedScrollView scrollView;
 
     private RequestsBuilder requestsBuilder;
     private String movieId;
@@ -109,6 +111,7 @@ public class DetailsActivity extends AppCompatActivity implements ConnectivityRe
     }
 
     private void initializeUI() {
+        scrollView = (NestedScrollView) findViewById(R.id.main_details_layout);
         moviePoster = (ImageView) findViewById(R.id.movie_poster);
         movieName = (TextView) findViewById(R.id.movie_name);
         releaseDate = (TextView) findViewById(R.id.release_date);
@@ -208,6 +211,8 @@ public class DetailsActivity extends AppCompatActivity implements ConnectivityRe
         trailerRecyclerView.setHasFixedSize(true);
         trailerRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         trailerRecyclerView.setAdapter(new TrailerListAdapter(this, trailerList));
+
+        scrollView.smoothScrollTo(0, 0);
     }
 
     @Override
@@ -236,7 +241,12 @@ public class DetailsActivity extends AppCompatActivity implements ConnectivityRe
             protected MovieDetails doInBackground(Void... voids) {
                 String sortOrder = moviePref.getSortOrder();
                 if (!requestsBuilder.isNetworkAvailable() && !sortOrder.equalsIgnoreCase(getString(R.string.favorites_sort))) {
-                    noContentTv.setText(R.string.no_internet_msg);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            noContentTv.setText(R.string.no_internet_msg);
+                        }
+                    });
                     return null;
                 }
                 try {
@@ -290,7 +300,12 @@ public class DetailsActivity extends AppCompatActivity implements ConnectivityRe
             @Override
             protected List<TrailerDetails> doInBackground(Void... voids) {
                 if (!requestsBuilder.isNetworkAvailable()) {
-                    noTrailerTv.setText(R.string.no_internet_msg);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            noContentTv.setText(R.string.no_internet_msg);
+                        }
+                    });
                     return null;
                 }
                 try {
